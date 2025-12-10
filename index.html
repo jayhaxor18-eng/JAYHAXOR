@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAYHAXOR - Password Cracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0, 20, 0, 0.9);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px #0f0, 0 0 20px #0f0; }
+            50% { text-shadow: 0 0 20px #0f0, 0 0 40px #0f0; }
+        }
+
+        .header h1 {
+            font-size: clamp(24px, 5vw, 36px);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: clamp(12px, 2.5vw, 16px);
+            color: #0a0;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #001a00;
+            border: 1px solid #0f0;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(12px, 2.5vw, 16px);
+            border-radius: 5px;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #0f0;
+            color: #000;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(14px, 3vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #0a0;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        button:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .terminal {
+            display: none;
+            background: #000;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .terminal.active {
+            display: block;
+        }
+
+        .terminal-line {
+            margin-bottom: 8px;
+            font-size: clamp(10px, 2vw, 14px);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #001a00;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0f0, #0a0);
+            width: 0%;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        .result {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            margin-top: 20px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .result h2 {
+            font-size: clamp(20px, 4vw, 32px);
+            margin-bottom: 20px;
+            color: #0f0;
+        }
+
+        .cracked-password {
+            font-size: clamp(18px, 3.5vw, 28px);
+            color: #ff0;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px solid #ff0;
+            border-radius: 5px;
+            word-break: break-all;
+        }
+
+        .warning {
+            color: #f00;
+            font-size: clamp(10px, 2vw, 12px);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .terminal {
+                min-height: 200px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ JAYHAXOR ⚠️</h1>
+            <p>ADVANCED PASSWORD CRACKING SYSTEM v3.14</p>
+            <p style="font-size: clamp(10px, 2vw, 12px);">⚡ BLACKHAT EDITION ⚡</p>
+        </div>
+
+        <div class="input-section" id="inputSection">
+            <div class="input-group">
+                <label>TARGET USERNAME:</label>
+                <input type="text" id="username" placeholder="Enter target username..." value="admin">
+            </div>
+            <div class="input-group">
+                <label>TARGET SYSTEM IP:</label>
+                <input type="text" id="ipAddress" placeholder="xxx.xxx.xxx.xxx" value="192.168.1.1">
+            </div>
+            <button id="startBtn" onclick="startHack()">🔓 INITIATE PASSWORD CRACK</button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="terminal" id="terminal"></div>
+
+        <div class="result" id="result">
+            <h2>🎯 ACCESS GRANTED 🎯</h2>
+            <p>PASSWORD SUCCESSFULLY CRACKED:</p>
+            <div class="cracked-password" id="crackedPassword"></div>
+            <p style="color: #0f0; margin-top: 20px;">SYSTEM COMPROMISED BY JAYHAXOR</p>
+            <button onclick="reset()" style="margin-top: 20px; width: auto; padding: 10px 30px;">RESET</button>
+        </div>
+
+        <div class="warning">
+            ⚠️ DISCLAIMER: THIS IS A PRANK SIMULATOR FOR ENTERTAINMENT PURPOSES ONLY ⚠️
+        </div>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const result = document.getElementById('result');
+        const inputSection = document.getElementById('inputSection');
+        const startBtn = document.getElementById('startBtn');
+
+        const passwords = [
+            'P@ssw0rd123!', 'Admin2024!', 'SecurePass99', 'H4ck3rPr00f', 
+            'MyS3cr3t!', 'Qwerty123!', 'Welcome2024', 'P@ssword!',
+            'Iloveyou123', 'Letmein2024', 'Dragon123!', 'Master2024',
+            '123456789!', 'Password1!', 'Abc123456!', 'TrustNo1!'
+        ];
+
+        const hackingMessages = [
+            'Initializing brute force attack...',
+            'Connecting to target system...',
+            'Bypassing firewall protocols...',
+            'Scanning for security vulnerabilities...',
+            'Injecting payload into system...',
+            'Exploiting SQL injection point...',
+            'Decrypting password hash...',
+            'Breaking RSA-2048 encryption...',
+            'Accessing /etc/shadow file...',
+            'Running dictionary attack...',
+            'Testing 10,000 password combinations/sec...',
+            'Bypassing two-factor authentication...',
+            'Cracking MD5 hash algorithm...',
+            'Exploiting buffer overflow...',
+            'Gaining root access...',
+            'Downloading password database...',
+            'Analyzing hash signatures...',
+            'Brute forcing SSH credentials...',
+            'Intercepting authentication tokens...',
+            'Bypassing IDS/IPS systems...',
+            'Executing privilege escalation...',
+            'Decrypting SSL certificates...',
+            'Password hash: 5f4dcc3b5aa765d61d8327deb882cf99',
+            'Running rainbow table attack...',
+            'Analyzing network packets...',
+            'Exploiting zero-day vulnerability...',
+            'Cracking WPA2 handshake...',
+            'Accessing administrator panel...',
+            'Bypassing CAPTCHA verification...',
+            'Extracting plaintext credentials...'
+        ];
+
+        function addTerminalLine(text, color = '#0f0') {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.style.color = color;
+            line.textContent = '> ' + text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateProgress(percent) {
+            progressFill.style.width = percent + '%';
+        }
+
+        async function startHack() {
+            const username = document.getElementById('username').value || 'admin';
+            const ip = document.getElementById('ipAddress').value || '192.168.1.1';
+
+            if (!username || !ip) {
+                alert('Please enter target username and IP address!');
+                return;
+            }
+
+            startBtn.disabled = true;
+            terminal.innerHTML = '';
+            terminal.classList.add('active');
+            progressBar.classList.add('active');
+            inputSection.style.opacity = '0.5';
+
+            addTerminalLine('JAYHAXOR v3.14 - BLACKHAT EDITION', '#ff0');
+            addTerminalLine('═══════════════════════════════════════');
+            await sleep(500);
+
+            addTerminalLine(`Target Username: ${username}`, '#0ff');
+            addTerminalLine(`Target IP: ${ip}`, '#0ff');
+            addTerminalLine('═══════════════════════════════════════');
+            await sleep(800);
+
+            // Simulate hacking process
+            const totalMessages = 25;
+            for (let i = 0; i < totalMessages; i++) {
+                const message = hackingMessages[Math.floor(Math.random() * hackingMessages.length)];
+                addTerminalLine(message);
+                updateProgress((i + 1) * (100 / totalMessages));
+                await sleep(Math.random() * 400 + 200);
+            }
+
+            addTerminalLine('═══════════════════════════════════════');
+            addTerminalLine('PASSWORD CRACKING IN PROGRESS...', '#ff0');
+            await sleep(1000);
+
+            // Show password attempts
+            for (let i = 0; i < 8; i++) {
+                const fakePass = generateRandomString();
+                addTerminalLine(`Trying: ${fakePass}`, '#f00');
+                await sleep(300);
+            }
+
+            await sleep(500);
+            addTerminalLine('═══════════════════════════════════════');
+            addTerminalLine('MATCH FOUND!', '#0f0');
+            addTerminalLine('DECRYPTING...', '#ff0');
+            await sleep(1500);
+
+            // Show result
+            const crackedPass = passwords[Math.floor(Math.random() * passwords.length)];
+            document.getElementById('crackedPassword').textContent = crackedPass;
+            
+            progressBar.classList.remove('active');
+            terminal.classList.remove('active');
+            result.classList.add('active');
+        }
+
+        function generateRandomString() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let result = '';
+            for (let i = 0; i < 12; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function reset() {
+            result.classList.remove('active');
+            terminal.classList.remove('active');
+            progressBar.classList.remove('active');
+            inputSection.style.opacity = '1';
+            startBtn.disabled = false;
+            terminal.innerHTML = '';
+            progressFill.style.width = '0%';
+        }
+    </script>
+</body>
+</html>
